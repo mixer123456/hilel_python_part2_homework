@@ -8,9 +8,7 @@ def remove_space(s: str) -> str:
     return result
 
 def get_str_revers(s: str) -> str:
-    start_ind = len(s) - 1
-    result = s[start_ind:0:-1]
-    result += s[0]
+    result = s[::-1]
     return result
 
 

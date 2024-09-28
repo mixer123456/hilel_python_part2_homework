@@ -7,7 +7,7 @@ def get_largest_even_number(lst: list) -> int:
     return max(max_even_number)
 
 result = get_largest_even_number(list1)
-print(result)
+print(result) # виведе 22
 
 
 '''2. Створити функцію, яка приймає один список та повертає три максимуми зі списку.'''
@@ -23,18 +23,18 @@ def get_three_maximums(lst: list[int]):
     return unique_values[:3]
 
 max_values = get_three_maximums(list2)
-print(max_values)
+print(max_values) # виведе  [7547, 3545, 243]
 
 
 '''Створити функцію, яка приймає два списки і повертає True, якщо в першому списку парних елементів більше, ніж НЕПАРНИХ у другому.'''
 list3 = [1, 10, 4, 13, 22, 10, 0, 100, 12, 14, 105]
 list4 = [1, 1, 3, 13, 22, 5, 17]
 
-def compare_lists_2(lst1: list, lst2: list):
+def compare_list(lst1: list, lst2: list):
     even_list_1 = [el for el in lst1 if el % 2 == 0]
     odd_list_2 = [el for el in lst2 if el % 2 != 0]
 
     return len(even_list_1) > len(odd_list_2)
 
-result = compare_lists_2(list3, list4)
-print(result)
+result = compare_list(list3, list4)
+print(result) # виведе True

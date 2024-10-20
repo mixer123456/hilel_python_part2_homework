@@ -19,8 +19,8 @@ def find_most_popular_and_shortest_word(file_path: str):
     '''
 
     text = read_file(file_path)
-    text = re.findall(r'\b\w+\b', text.lower())  # використовуємо для розбиття текста на слова з умовою використування символів пунктуації
-
+    text = re.findall(r'\b\w+\b',
+                      text.lower())  # використовуємо для розбиття текста на слова з умовою використування символів пунктуації
 
     # утворюємо сет унікальних слів
     set_text = set(text)
@@ -34,23 +34,18 @@ def find_most_popular_and_shortest_word(file_path: str):
 
     # ввидаляємо всі елементи із ліста які довші за вказаний
     list_text = list(filter(lambda el: len_first_el == len(el), list_text))
+    print(list_text)
 
-    # утвворюємо дікт результатів
-    dict_text = {}
+    popular = [(el, text.count(el)) for el in list_text]
 
-    # ідем фором по лісту та дообавляєм дикт ключ значення ключ це слово значение це число
-    for el in list_text:
-        dict_text[el] = text.count(el)
-
-    # з нашего дікта робим список таплів та сортируєм йогоо по кількості
-    list_text = list(dict_text.items())
-    list_text.sort(reverse=True, key=lambda el: el[1])
+    popular.sort(reverse=True, key=lambda el: el[1])
 
     # ввидалити з нашого списка таплів ввсі елементи кількість поовторень яких меньше ніж у першого
-    count_first_el = list_text[0][1]
-    list_text = list(filter(lambda el: count_first_el == el[1], list_text))
+    count_first_el = popular[0][1]
+    popular = list(filter(lambda el: count_first_el == el[1], popular))
+    print(popular)
 
-    return list_text
+    return popular
 
 
 def convert_from_lowercase_to_uppercase(file_path: str):

@@ -41,22 +41,27 @@ def read_data_csv():
     :return: read data from csv file
     '''
     with open('data.csv', mode='r', encoding='utf-8') as file:
-        dict_data =  csv.DictReader(file)
+        dict_data = csv.DictReader(file)
         return next(dict_data)
 
 
 staff.update({'Law dep': 50})
-print(factory)
-save_data()
 
 staff['Finance dep'] = 100
-print(factory)
-save_data()
 
 staff.pop('Finance dep')
 print(factory)
 save_data()
 
+data_json = read_data_json()
+data_csv = read_data_csv()
+
+print(f'''json data
+{data_json}''')
+
+print(f'''
+csv data
+{data_csv}''')
+
 count_staff = staff.values()
 print(sum(count_staff))
-

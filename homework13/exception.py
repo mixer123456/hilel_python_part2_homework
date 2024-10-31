@@ -1,0 +1,2 @@
+class CheapMobPhone(Exception):
+    pass

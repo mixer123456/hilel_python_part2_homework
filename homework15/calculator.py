@@ -5,8 +5,9 @@ import csv
 class Calculator:
     '''Calculator'''
 
-    def __init__(self):
+    def __init__(self, file_name):
         '''calculator initialization method'''
+        self.file_name = file_name
         self.action_dict = {}
 
     def get_action_dict(self) -> dict:
@@ -16,23 +17,22 @@ class Calculator:
         '''
         return self.action_dict
 
-    def save_result(self, file_name):
+    def save_result(self):
         '''
         save results in file
-        :param file_name: file name
         '''
-        with open(file_name, mode='w', encoding='UTF-8') as file:
+        with open(self.file_name, mode='w', encoding='UTF-8') as file:
             csv.DictWriter(file, fieldnames=['action', 'result']).writeheader()
             csv.DictWriter(file, fieldnames=['action', 'result']).writerows(
                 [{'action': action, 'result': result} for action, result in self.action_dict.items()])
 
-    def read_results(self, file_name):
+    def read_results(self):
         '''
         read data csv
         :return: read data from csv file
         '''
         rs = []
-        with open(file_name, mode='r', encoding='utf-8') as file:
+        with open(self.file_name, mode='r', encoding='utf-8') as file:
             dict_data = csv.DictReader(file)
 
             for row in dict_data:
@@ -114,46 +114,46 @@ class Calculator:
         self.action_dict.update(factorial_dict)
 
     def sum_five_results(self):
-        results = calculator.read_results('results')
+        results = calculator.read_results()
         list_num = [int(el['result']) for el in results[:5]]
         return sum(list_num[:5])
 
 
-calculator = Calculator()
-# print(calculator.get_action_dict())
-# calculator.sum_numbers(5, 5)
-# print(calculator.get_action_dict())
-# calculator.sum_numbers(5, 4)
-# print(calculator.get_action_dict())
-#
-# calculator.minus_numbers(6, 5)
-# print(calculator.get_action_dict())
-# calculator.minus_numbers(6, 4)
-# print(calculator.get_action_dict())
-#
-# calculator.multiplication_numbers(5, 5)
-# print(calculator.get_action_dict())
-# calculator.multiplication_numbers(5, 4)
-# print(calculator.get_action_dict())
-#
-# calculator.division_numbers(6, 4)
-# print(calculator.get_action_dict())
-# calculator.division_numbers(6, 2)
-# print(calculator.get_action_dict())
-#
-# calculator.degree_number(100, -10)
-# print(calculator.get_action_dict())
-# calculator.degree_number(5, 0)
-# print(calculator.get_action_dict())
-#
-# calculator.root_number(6, 5)
-# print(calculator.get_action_dict())
-# calculator.root_number(6, 1)
-# print(calculator.get_action_dict())
-#
-# calculator.factorial_number(5)
-# print(calculator.get_action_dict())
-# calculator.factorial_number(4)
-# print(calculator.get_action_dict())
+calculator = Calculator('results')
+print(calculator.get_action_dict())
+calculator.action_sum(5, 5)
+print(calculator.get_action_dict())
+calculator.action_sum(5, 4)
+print(calculator.get_action_dict())
+
+calculator.action_minus(6, 5)
+print(calculator.get_action_dict())
+calculator.action_minus(6, 4)
+print(calculator.get_action_dict())
+
+calculator.action_multiplication(5, 5)
+print(calculator.get_action_dict())
+calculator.action_multiplication(5, 4)
+print(calculator.get_action_dict())
+
+calculator.action_division(6, 4)
+print(calculator.get_action_dict())
+calculator.action_division(6, 2)
+print(calculator.get_action_dict())
+
+calculator.action_degree(100, -10)
+print(calculator.get_action_dict())
+calculator.action_degree(5, 0)
+print(calculator.get_action_dict())
+
+calculator.action_root(6, 5)
+print(calculator.get_action_dict())
+calculator.action_root(6, 1)
+print(calculator.get_action_dict())
+
+calculator.action_factorial(5)
+print(calculator.get_action_dict())
+calculator.action_factorial(4)
+print(calculator.get_action_dict())
 print(calculator.sum_five_results())
-print(calculator.save_result('results'))
+print(calculator.save_result())

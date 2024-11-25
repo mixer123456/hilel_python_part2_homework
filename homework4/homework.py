@@ -1,5 +1,5 @@
 list1 = [1, 2, 0, 1, 0, 1, 0, 3, 0, 1]
-list2 = [9, 0, 0, 0, 9, 1, 2, 0, 1, 0, 1, 0, 0, 3, 0, 1, 9, 0, 0, 0, 0, 9]
+list2 = [9, 0.0, 0, 9, 1, 2, 0, 1, 0, 1, 0.0, 3, 0, 1, 9, 0, 0, 0, 0, 9]
 list3 = ["a", 0, 0, "b", "c", "d", 0, 1, 0, 1, 0, 3, 0, 1, 9, 0, 0, 0, 0, 9]
 list4 = ["a", 0, 0, "b", None, "c", "d", 0, 1, False, 0, 1, 0, 3, [], 0, 1, 9, 0, 0, {}, 0, 0, 9]
 list5 = [0, 1, None, 2, False, 1, 0]
@@ -17,8 +17,8 @@ def move_zeros_to_end(lst: list):
     :param lst: get list
     :return: list with zero(-s) at end
     '''
-    result = [num for num in lst if num != 0]
-    result += [0] * lst.count(0)
+    result = [num for num in lst if not (type(num) is int and num == 0)]
+    result += [0] * (len(lst) - len(result))
     return result
 
 

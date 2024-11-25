@@ -34,7 +34,6 @@ def find_most_popular_and_shortest_word(file_path: str):
 
     # ввидаляємо всі елементи із ліста які довші за вказаний
     list_text = list(filter(lambda el: len_first_el == len(el), list_text))
-    print(list_text)
 
     popular = [(el, text.count(el)) for el in list_text]
 
@@ -43,7 +42,6 @@ def find_most_popular_and_shortest_word(file_path: str):
     # ввидалити з нашого списка таплів ввсі елементи кількість поовторень яких меньше ніж у першого
     count_first_el = popular[0][1]
     popular = list(filter(lambda el: count_first_el == el[1], popular))
-    print(popular)
 
     return popular
 

@@ -1,6 +1,8 @@
 from math import factorial
 import csv
 
+from exeption import DegreeRoot
+
 
 class Calculator:
     '''Calculator'''
@@ -8,14 +10,20 @@ class Calculator:
     def __init__(self, file_name):
         '''calculator initialization method'''
         self.file_name = file_name
-        self.action_dict = {}
+        self.action_history = []
 
-    def get_action_dict(self) -> dict:
+    def get_action_history(self) -> list:
         '''
         get actions dict
         :return: actions history(saved) dict
         '''
-        return self.action_dict
+        return self.action_history
+
+    def add_action_to_history(self, action: str, result):
+        self.action_history.append({
+            'action': action,
+            'result': result
+        })
 
     def save_result(self):
         '''
@@ -24,7 +32,7 @@ class Calculator:
         with open(self.file_name, mode='w', encoding='UTF-8') as file:
             csv.DictWriter(file, fieldnames=['action', 'result']).writeheader()
             csv.DictWriter(file, fieldnames=['action', 'result']).writerows(
-                [{'action': action, 'result': result} for action, result in self.action_dict.items()])
+                [{'action': item['action'], 'result': item['result']} for item in self.action_history])
 
     def read_results(self):
         '''
@@ -45,9 +53,9 @@ class Calculator:
         :param first_num: first num
         :param second_num: second num
         '''
-        sum = first_num + second_num
-        sum_dict = {f'{first_num}+{second_num}': sum}
-        self.action_dict.update(sum_dict)
+        result = first_num + second_num
+        action = f'{first_num}+{second_num}'
+        self.add_action_to_history(action, result)
 
     def action_minus(self, first_num: int, second_num: int):
         '''
@@ -55,9 +63,9 @@ class Calculator:
         :param first_num:first num
         :param second_num:second num
         '''
-        minus = first_num - second_num
-        minus_dict = {f'{first_num}-{second_num}': minus}
-        self.action_dict.update(minus_dict)
+        result = first_num - second_num
+        action = f'{first_num}-{second_num}'
+        self.add_action_to_history(action, result)
 
     def action_multiplication(self, first_num: int, second_num: int):
         '''
@@ -65,9 +73,9 @@ class Calculator:
         :param first_num:first num
         :param second_num:second num
         '''
-        multiplication = first_num * second_num
-        multiplication_dict = {f'{first_num}*{second_num}': multiplication}
-        self.action_dict.update(multiplication_dict)
+        result = first_num * second_num
+        action = f'{first_num}*{second_num}'
+        self.add_action_to_history(action, result)
 
     def action_division(self, first_num: int, second_num: int):
         '''
@@ -75,9 +83,11 @@ class Calculator:
         :param first_num:first num
         :param second_num:second num
         '''
-        division = round(first_num / second_num, 2)
-        division_dict = {f'{first_num}/{second_num}': division}
-        self.action_dict.update(division_dict)
+        if second_num == 0:
+            raise ZeroDivisionError('cant be divided by 0')
+        result = round(first_num / second_num, 2)
+        action = f'{first_num}/{second_num}'
+        self.add_action_to_history(action, result)
 
     def action_degree(self, first_num: int, second_num: int):
         '''
@@ -85,9 +95,9 @@ class Calculator:
         :param first_num:number raised to a degree
         :param second_num:degree
         '''
-        degree = first_num ** second_num
-        degree_dict = {f'{first_num}^{second_num}': degree}
-        self.action_dict.update(degree_dict)
+        result = first_num ** second_num
+        action = f'{first_num}^{second_num}'
+        self.add_action_to_history(action, result)
 
     def action_root(self, first_num: int, second_num: int):
         '''
@@ -96,64 +106,61 @@ class Calculator:
         :param second_num:degree of the root
         '''
         if first_num < 0 and second_num % 2 == 0:
-            raise ValueError("It is impossible to extract an even root from a negative number")
+            raise DegreeRoot('It is impossible to extract an even root from a negative number')
         if second_num == 0:
-            raise ValueError("The degree of a root cannot be equal to zero")
+            raise DegreeRoot('The degree of a root cannot be equal to zero')
 
-        root = round(first_num ** (1 / second_num))
-        root_dict = {f'{second_num}√{first_num}': root}
-        self.action_dict.update(root_dict)
+        result = round(first_num ** (1 / second_num))
+        action = f'{second_num}√{first_num}'
+        self.add_action_to_history(action, result)
 
     def action_factorial(self, num: int):
         '''
         factorial num
         :param num: the number over which we do the factorial
         '''
-        factorial_num = factorial(num)
-        factorial_dict = {f'{num}!': factorial_num}
-        self.action_dict.update(factorial_dict)
+        result = factorial(num)
+        action = f'{num}!'
+        self.add_action_to_history(action, result)
 
-    def sum_five_results(self):
+    def get_sum_first_five_results(self):
         results = calculator.read_results()
         list_num = [int(el['result']) for el in results[:5]]
         return sum(list_num[:5])
 
 
 calculator = Calculator('results')
-print(calculator.get_action_dict())
 calculator.action_sum(5, 5)
-print(calculator.get_action_dict())
 calculator.action_sum(5, 4)
-print(calculator.get_action_dict())
 
 calculator.action_minus(6, 5)
-print(calculator.get_action_dict())
 calculator.action_minus(6, 4)
-print(calculator.get_action_dict())
 
 calculator.action_multiplication(5, 5)
-print(calculator.get_action_dict())
 calculator.action_multiplication(5, 4)
-print(calculator.get_action_dict())
 
 calculator.action_division(6, 4)
-print(calculator.get_action_dict())
 calculator.action_division(6, 2)
-print(calculator.get_action_dict())
 
 calculator.action_degree(100, -10)
-print(calculator.get_action_dict())
 calculator.action_degree(5, 0)
-print(calculator.get_action_dict())
 
 calculator.action_root(6, 5)
-print(calculator.get_action_dict())
 calculator.action_root(6, 1)
-print(calculator.get_action_dict())
 
 calculator.action_factorial(5)
-print(calculator.get_action_dict())
 calculator.action_factorial(4)
-print(calculator.get_action_dict())
-print(calculator.sum_five_results())
-print(calculator.save_result())
+print(calculator.get_action_history())
+
+calculator.action_minus(4,5)
+calculator.action_minus(4,5)
+calculator.action_sum(4,5)
+calculator.action_sum(3,4)
+calculator.action_sum(2,3)
+calculator.action_sum(1,2)
+calculator.action_sum(0,1)
+calculator.action_minus(4,5)
+print(calculator.action_history)
+
+calculator.save_result()
+print(calculator.get_sum_first_five_results())

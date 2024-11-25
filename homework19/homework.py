@@ -19,10 +19,10 @@ with sqlite3.connect('Chinook_Sqlite.sqlite') as con:
     print('-' * 50)
 
     print('TASK 4')
-    cursor.execute('''SELECT InvoiceDate FROM Invoice ORDER BY InvoiceDate ASC LIMIT 1''')
+    cursor.execute('''SELECT InvoiceId, CustomerId, MIN(InvoiceDate), BillingAddress, BillingCity, BillingState, BillingCountry, BillingPostalCode, Total FROM Invoice''')
     print(cursor.fetchall())
     print('-' * 50)
 
     print('TASK 5')
-    cursor.execute('''SELECT InvoiceDate FROM Invoice ORDER BY InvoiceDate DESC LIMIT 1''')
+    cursor.execute('''SELECT InvoiceId, CustomerId, MAX(InvoiceDate), BillingAddress, BillingCity, BillingState, BillingCountry, BillingPostalCode, Total FROM Invoice''')
     print(cursor.fetchall())

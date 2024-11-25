@@ -1,7 +1,7 @@
 import csv
 import json
 
-staff = {
+factory = {
     'It department': 100,
     'Sales dep': 100,
     'Production dep': 100,
@@ -9,14 +9,13 @@ staff = {
     'Construction dep': 100,
 }
 
-factory = staff
-
 
 def save_data():
     '''
     save data json and csv
     :return:
     '''
+    global factory
     with open('data.json', mode='w', encoding='utf-8') as file:
         json.dump(factory, file, sort_keys=True, skipkeys=True, indent=4)
 
@@ -45,23 +44,29 @@ def read_data_csv():
         return next(dict_data)
 
 
-staff.update({'Law dep': 50})
+factory.update({'Law dep': 50})
 
-staff['Finance dep'] = 100
+factory['Finance dep'] = 100
 
-staff.pop('Finance dep')
+factory.pop('Finance dep')
 print(factory)
 save_data()
 
-data_json = read_data_json()
-data_csv = read_data_csv()
+staff = read_data_json()
 
 print(f'''json data
-{data_json}''')
+{staff}''')
+
+
+
+# count_staff = staff.values()
+# print(sum(count_staff))
+
+staff = read_data_csv()
 
 print(f'''
 csv data
-{data_csv}''')
+{staff}''')
 
 count_staff = staff.values()
 print(sum(count_staff))

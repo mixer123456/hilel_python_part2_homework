@@ -1,8 +1,14 @@
-vowels_letters = ['a', 'e', 'i', 'o', 'u']
+vowels_letters = [
+    'a', 'e', 'i', 'o', 'u',
+    'а', 'е', 'є', 'и', 'і', 'ї', 'о', 'у', 'ю', 'я',
+    'ё', 'ы', 'э',
+]
 
 consonants_letters = [
     'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n',
     'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z',
+    'б', 'в', 'г', 'ґ', 'д', 'ж', 'з', 'й', 'к', 'л', 'м', 'н',
+    'п', 'р', 'с', 'т', 'ф', 'х', 'ц', 'ч', 'ш', 'щ',
 ]
 
 
@@ -35,10 +41,11 @@ def get_most_popular_letters_in_text(letters: list, text: str, limit: int = 1):
     return [char[0] for char in result]  # перетворрюємо список таплів у список символів
 
 
-def func(file_path: str):
+def get_most_popular_letter_from_file(file_path: str):
     '''
-    calculate count of vowels and count of consonants letters in text and if vowels letters count bigger print top 3
-     popular vowels letters or if vowels letters count less that consonants print most popular consonants letter
+     read text file and calculate count of vowels and count of consonants letters in text and if vowels letters count
+     bigger return top 3 popular vowels letters or if vowels letters count less that consonants return most popular
+     consonants letter
     :param file_path: file name
     :return: return top 3 popular vowels letter or most popular consonants letter
     '''
@@ -49,10 +56,10 @@ def func(file_path: str):
     consonants_letters_count = len(text_consonants)
 
     if vowels_letters_count > consonants_letters_count:
-        return get_most_popular_letters_in_text(vowels_letters, text, 3)
+        return str(get_most_popular_letters_in_text(vowels_letters, text, 3))
 
     if vowels_letters_count < consonants_letters_count:
-        return get_most_popular_letters_in_text(consonants_letters, text)
+        return str(get_most_popular_letters_in_text(consonants_letters, text))
 
     return 'кількість голоосних дооріввнює кількості приголосних'
 
@@ -61,17 +68,14 @@ def safe_result(file_name: str, result: str):
     '''
     safe result to new file
     :param file_name: file name
-    :param result: result thhat we want safe
+    :param result: result that we want safe
     :return: nothing
     '''
     with open(file_name, mode='w') as file:
         file.write(result)
 
 
-top_letters = func('input_8.txt')
+top_letters = get_most_popular_letter_from_file('input_8.txt')
 print(top_letters)
 
-safe_result('output.txt', top_letters[0])
-
-with open('output.txt', mode="w") as file:
-    file.write(top_letters[0])
+safe_result('output.txt', top_letters)

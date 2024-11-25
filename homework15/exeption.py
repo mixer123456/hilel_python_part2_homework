@@ -1,0 +1,3 @@
+class DegreeRoot(Exception):
+    pass
+

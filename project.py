@@ -18,10 +18,13 @@ class Transaction(BaseModel):
     Token = CharField(null=False)
     Price = IntegerField(null=False, default=0)
     Balance = IntegerField(null=False, default=0)
-    IdParentTransaction = IntegerField()
+    IdParentTransaction = IntegerField(null=False)
 
 
-
+class PortfolioBaseTicker(BaseModel):
+    IdPortfolio = AutoField(primary_key=True)
+    Name = TextField(null=False, unique=True)
+    BaseTicker = TextField(null=False)
 
 
 with db:
@@ -34,26 +37,9 @@ with db:
 
 
 class Portfolio:
-    def __init__(self, name: str, money: int):
+    def __init__(self, name: str, base_ticker: str):
         self.name = name
-        self.money = money
-
-    @property
-    def money(self):
-        return self.__money
-
-    @money.setter
-    def money(self, money):
-        if money <= 0:
-            raise Exception('You dont have money?')
-        self.__money = money
-
-
-    def add_money(self, amount: int):
-        if amount <= 0:
-            raise Exception('You cant add nothing')
-
-        self.__money += amount
+        self.__base_ticker = base_ticker
 
     def show_last_transaction(self):
         try:
@@ -78,14 +64,23 @@ class Portfolio:
             print(f"Error fetching the last transaction: {e}")
             return None
 
-    def add_transaction(self, transaction_type: str, amount: float, token: str, price: float = 0.0,parent_transaction: int = None):
+    def add_transaction(self, token: str, transaction_type: str, amount: float, price: float = 0.0,
+                        parent_transaction: int = None):
         try:
             # Get the latest balance for the token, if it exists
-            last_transaction = (Transaction
-                                .select()
-                                .where(Transaction.Token == token.lower())
-                                .order_by(Transaction.IdTransaction.desc())
-                                .first())
+
+            if type(token) == str:
+                last_transaction = (Transaction
+                                    .select()
+                                    .where(Transaction.Token == token.lower())
+                                    .order_by(Transaction.IdTransaction.desc())
+                                    .first())
+            else:
+                last_transaction = (Transaction
+                                    .select()
+                                    .where(Transaction.Token == token)
+                                    .order_by(Transaction.IdTransaction.desc())
+                                    .first())
 
             # Calculate new balance
             new_balance = (last_transaction.Balance if last_transaction else 0) + (
@@ -94,14 +89,24 @@ class Portfolio:
             new_price = amount * price
 
             # Insert the new transaction
-            new_transaction = Transaction.create(
-                TransactionType=transaction_type,
-                Amount=amount,
-                Token=token.lower(),
-                Balance=new_balance,
-                Price=new_price,
-                IdParentTransaction=parent_transaction
-            )
+            if type(token) == str:
+                new_transaction = Transaction.create(
+                    TransactionType=transaction_type,
+                    Amount=amount,
+                    Token=token.lower(),
+                    Balance=new_balance,
+                    Price=new_price,
+                    IdParentTransaction=parent_transaction
+                )
+            else:
+                new_transaction = Transaction.create(
+                    TransactionType=transaction_type,
+                    Amount=amount,
+                    Token=token,
+                    Balance=new_balance,
+                    Price=new_price,
+                    IdParentTransaction=parent_transaction
+                )
             print(f"Transaction added successfully: {new_transaction.IdTransaction}")
             return new_transaction
         except Exception as e:
@@ -128,6 +133,36 @@ class Portfolio:
             print(f"Error fetching balance: {e}")
             return None
 
+    def get_base_ticker_balance(self):
+        last_transaction = (Transaction
+                            .select()
+                            .where(Transaction.Token == self.__base_ticker)
+                            .order_by(Transaction.IdTransaction.desc())
+                            .first())
+
+        return last_transaction.Balance
+
+    def insert_base_ticker(self):
+
+        PortfolioBaseTicker.create(Name=self.name, BaseTicker=self.__base_ticker)
+
+    def deposit_base_ticker(self, amount: float):
+
+        if amount <= 0:
+            raise Exception('Are you want to deposit nothing?')
+        query = PortfolioBaseTicker.select(PortfolioBaseTicker.BaseTicker).where(PortfolioBaseTicker.Name == self.name)
+        self.add_transaction(query, 'deposit', amount)
+
+    def withdraw_base_ticker(self, amount: float):
+
+        if amount <= 0:
+            raise Exception('Are you want to withdraw nothing?')
+        query = PortfolioBaseTicker.select(PortfolioBaseTicker.BaseTicker).where(PortfolioBaseTicker.Name == self.name)
+        self.add_transaction(query, 'withdraw', amount)
+
+    def delete_base_ticker(self):
+        PortfolioBaseTicker.delete().where(PortfolioBaseTicker.Name == self.name).execute()
+
     def delete_transaction_by_id(self, transaction_id: int):
         Transaction.delete_by_id(transaction_id)
 
@@ -141,41 +176,53 @@ class Portfolio:
             print(f"Error deleting transactions: {e}")
             return None
 
-    def deposit(self, amount: float, token: str):
+    def deposit(self, token: str, amount: float):
         if amount <= 0:
             raise Exception('You want to deposit nothing?')
 
-        self.add_transaction('deposit', amount, token)
+        self.add_transaction(token, 'deposit', amount)
 
-    def withdraw(self, amount: float, token: str):
+    def withdraw(self, token: str, amount: float):
         if amount <= 0:
             raise Exception('You want to withdraw nothing?')
 
-        self.add_transaction('withdraw', amount, token)
+        if Transaction.Balance == 0:
+            raise Exception('You dont have this token(s) to withdraw')
 
-    def buy(self, token: str, price: int, amount: float, parent_transaction: int = None):
+        self.add_transaction(token, 'withdraw', amount, )
+
+    def buy(self, token: str, price: float, amount: float, parent_transaction: int = None):
+
+        total = amount * price
+        base_ticker_balance = self.get_base_ticker_balance()
+
         if amount <= 0:
             raise Exception('You want to buy nothing?')
 
         if price <= 0:
             raise Exception('Token cant be free or less than 0')
 
-        if price >= self.money:
-            raise Exception('You dont have enough money')
+        if base_ticker_balance < total:
+            raise Exception('You dont have enough your base token(s)')
 
-        new_price = amount * price
-        self.add_transaction('buy', amount, token, new_price, parent_transaction)
-        self.__money -= new_price
+        self.add_transaction(token, 'buy', amount, price, parent_transaction)
+        self.withdraw_base_ticker(total)
 
-    def sell(self, token: str, price: int, amount: float, parent_transaction: int = None):
+    def sell(self, token: str, price: float, amount: float, parent_transaction: int = None):
+
         if amount <= 0:
             raise Exception('You want to sell nothing?')
 
         if price <= 0:
             raise Exception('Token cant be free or less than 0')
 
-        new_price = int(amount * price)
-        self.add_transaction('sell', amount, token, new_price)
-        self.__money += new_price
+        if Transaction.Balance == 0:
+            raise Exception('You dont have this token(s) to sell')
 
-port = Portfolio('mixer', 100)
+        total = int(amount * price)
+        self.add_transaction(token, 'sell', amount, price, parent_transaction)
+        self.deposit_base_ticker(total)
+
+
+port = Portfolio('mixer', 'USDT')
+port.buy('bread', 1, 1)

@@ -17,6 +17,7 @@ class Transaction(BaseModel):
     Amount = IntegerField(null=False, default=0)
     Token = CharField(null=False)
     Price = IntegerField(null=False, default=0)
+    Total = IntegerField()
     Balance = IntegerField(null=False, default=0)
     IdParentTransaction = IntegerField(null=False)
 
@@ -26,43 +27,36 @@ class PortfolioBaseTicker(BaseModel):
     Name = TextField(null=False, unique=True)
     BaseTicker = TextField(null=False)
 
-
-with db:
-    db.create_tables([Transaction])
-
-
-# customer = {'TransactionType': 'deposit', 'Amount': 1, 'Token': 'bread'.lower(), 'Balance': 3}
-# Transaction.add_transaction('deposit', 100, 'euro')
-# Transaction.show_balance_by_token('euro')
-
-
-class Portfolio:
     def __init__(self, name: str, base_ticker: str):
         self.name = name
-        self.__base_ticker = base_ticker
+        self.BaseTicker = base_ticker
 
-    def show_last_transaction(self):
+    def get_last_transactions(self, limit):
         try:
-            last_transaction = Transaction.select().order_by(Transaction.IdTransaction.desc()).first()
-            if last_transaction:
-                transaction_data = [
-                    ["ID", last_transaction.IdTransaction],
-                    ["Date", last_transaction.Date],
-                    ["Type", last_transaction.TransactionType],
-                    ["Amount", last_transaction.Amount],
-                    ["Token", last_transaction.Token],
-                    ["Price", last_transaction.Price],
-                    ["Balance", last_transaction.Balance],
-                    ["Parent ID", last_transaction.IdParentTransaction]
-                ]
-                print(tabulate(transaction_data, headers=["Field", "Value"], tablefmt="pretty"))
-                return last_transaction
+            # Получаем последние транзакции, отсортированные по ID в убывающем порядке
+            transactions = (Transaction
+                            .select()
+                            .order_by(Transaction.IdTransaction.desc())
+                            .limit(limit))
+
+            # Форматируем вывод
+            if transactions:
+                print(f"Last {limit} transaction(s):")
+                for transaction in transactions:
+                    print(f"ID: {transaction.IdTransaction}, "
+                          f"Date: {transaction.Date}, "
+                          f"Type: {transaction.TransactionType}, "
+                          f"Amount: {transaction.Amount}, "
+                          f"Token: {transaction.Token}, "
+                          f"Price: {transaction.Price}, "
+                          f"Balance: {transaction.Balance}")
+                return transactions
             else:
                 print("No transactions found.")
-                return None
+                return []
         except Exception as e:
-            print(f"Error fetching the last transaction: {e}")
-            return None
+            print(f"Error fetching transactions: {e}")
+            return []
 
     def add_transaction(self, token: str, transaction_type: str, amount: float, price: float = 0.0,
                         parent_transaction: int = None):
@@ -86,7 +80,7 @@ class Portfolio:
             new_balance = (last_transaction.Balance if last_transaction else 0) + (
                 amount if transaction_type in ['deposit', 'buy'] else -amount)
 
-            new_price = amount * price
+            total = amount * price
 
             # Insert the new transaction
             if type(token) == str:
@@ -95,7 +89,8 @@ class Portfolio:
                     Amount=amount,
                     Token=token.lower(),
                     Balance=new_balance,
-                    Price=new_price,
+                    Price=price,
+                    Total=total,
                     IdParentTransaction=parent_transaction
                 )
             else:
@@ -103,8 +98,9 @@ class Portfolio:
                     TransactionType=transaction_type,
                     Amount=amount,
                     Token=token,
+                    Price=price,
                     Balance=new_balance,
-                    Price=new_price,
+                    Total=total,
                     IdParentTransaction=parent_transaction
                 )
             print(f"Transaction added successfully: {new_transaction.IdTransaction}")
@@ -113,25 +109,22 @@ class Portfolio:
             print(f"Error adding transaction: {e}")
             return None
 
-    def show_balance_by_token(self, token_name: str):
-        try:
-            # Get the latest transaction for the given token
-            last_transaction = (Transaction
-                                .select()
-                                .where(Transaction.Token == token_name.lower())
-                                .order_by(Transaction.IdTransaction.desc())
-                                .first())
+    def show_balance_by_token(self, token: str):
+        balance = self.get_balance_by_token(token)
+        print(f"Balance for token '{token}': {balance}")
 
-            if last_transaction:
-                # Display and return the balance
-                print(f"Balance for token '{token_name}': {last_transaction.Balance}")
-                return last_transaction.Balance
-            else:
-                print(f"Token '{token_name}' not found in the database.")
-                return None
-        except Exception as e:
-            print(f"Error fetching balance: {e}")
-            return None
+    def get_balance_by_token(self, token: str):
+        # Get the latest transaction for the given token
+        last_transaction = (Transaction
+                            .select()
+                            .where(Transaction.Token == token.lower())
+                            .order_by(Transaction.IdTransaction.desc())
+                            .first())
+
+        if last_transaction:
+            return last_transaction.Balance
+        else:
+            return 0
 
     def get_base_ticker_balance(self):
         last_transaction = (Transaction
@@ -142,29 +135,30 @@ class Portfolio:
 
         return last_transaction.Balance
 
-    def insert_base_ticker(self):
-
-        PortfolioBaseTicker.create(Name=self.name, BaseTicker=self.__base_ticker)
+    # def deposit_base_ticker(self, amount: float):
+    #     if amount <= 0:
+    #         raise Exception('Are you want to deposit nothing?')
+    #
+    #     query = PortfolioBaseTicker.select(PortfolioBaseTicker.BaseTicker).where(PortfolioBaseTicker.Name == self.name)
+    #     self.add_transaction(query, 'deposit', amount)
 
     def deposit_base_ticker(self, amount: float):
 
         if amount <= 0:
             raise Exception('Are you want to deposit nothing?')
-        query = PortfolioBaseTicker.select(PortfolioBaseTicker.BaseTicker).where(PortfolioBaseTicker.Name == self.name)
-        self.add_transaction(query, 'deposit', amount)
+
+        self.add_transaction(self.__base_ticker, 'deposit', amount)
+
 
     def withdraw_base_ticker(self, amount: float):
-
         if amount <= 0:
             raise Exception('Are you want to withdraw nothing?')
-        query = PortfolioBaseTicker.select(PortfolioBaseTicker.BaseTicker).where(PortfolioBaseTicker.Name == self.name)
-        self.add_transaction(query, 'withdraw', amount)
+        self.add_transaction(self.__base_ticker, 'withdraw', amount)
 
-    def delete_base_ticker(self):
-        PortfolioBaseTicker.delete().where(PortfolioBaseTicker.Name == self.name).execute()
 
     def delete_transaction_by_id(self, transaction_id: int):
         Transaction.delete_by_id(transaction_id)
+
 
     def delete_multiple_transactions(self, criteria):
         try:
@@ -176,23 +170,27 @@ class Portfolio:
             print(f"Error deleting transactions: {e}")
             return None
 
+
     def deposit(self, token: str, amount: float):
         if amount <= 0:
             raise Exception('You want to deposit nothing?')
 
         self.add_transaction(token, 'deposit', amount)
 
+
     def withdraw(self, token: str, amount: float):
+        token_balance = self.get_balance_by_token(token)
+
         if amount <= 0:
             raise Exception('You want to withdraw nothing?')
 
-        if Transaction.Balance == 0:
-            raise Exception('You dont have this token(s) to withdraw')
+        if token_balance <= amount:
+            raise Exception('You dont have enough this token(s) to withdraw')
 
         self.add_transaction(token, 'withdraw', amount, )
 
-    def buy(self, token: str, price: float, amount: float, parent_transaction: int = None):
 
+    def buy(self, token: str, price: float, amount: float, parent_transaction: int = None):
         total = amount * price
         base_ticker_balance = self.get_base_ticker_balance()
 
@@ -208,7 +206,9 @@ class Portfolio:
         self.add_transaction(token, 'buy', amount, price, parent_transaction)
         self.withdraw_base_ticker(total)
 
+
     def sell(self, token: str, price: float, amount: float, parent_transaction: int = None):
+        token_balance = self.get_balance_by_token(token)
 
         if amount <= 0:
             raise Exception('You want to sell nothing?')
@@ -216,7 +216,7 @@ class Portfolio:
         if price <= 0:
             raise Exception('Token cant be free or less than 0')
 
-        if Transaction.Balance == 0:
+        if token_balance <= amount:
             raise Exception('You dont have this token(s) to sell')
 
         total = int(amount * price)
@@ -224,5 +224,15 @@ class Portfolio:
         self.deposit_base_ticker(total)
 
 
-port = Portfolio('mixer', 'USDT')
-port.buy('bread', 1, 1)
+with db:
+    db.create_tables([Transaction, PortfolioBaseTicker])
+
+port = PortfolioBaseTicker('mixer', 'USDT')
+# port.deposit('bread', 5)
+# port.withdraw('bread', 100)
+# port.show_balance_by_token('bread')
+# port.withdraw('bread', 5)
+# port.show_balance_by_token('bread')
+# port.withdraw('bread', -5)
+# port.get_base_ticker_balance()
+print(port.BaseTicker)

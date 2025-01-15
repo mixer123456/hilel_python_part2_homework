@@ -6,6 +6,8 @@ from datetime import date
 from .base_model import BaseModel
 from .transaction import Transaction
 
+from libs.get_token_price import get_token_price
+
 class Portfolio(BaseModel):
     IdPortfolio = AutoField(primary_key=True)
     Name = TextField(null=False, unique=True)
@@ -45,8 +47,24 @@ class Portfolio(BaseModel):
 
         # 2. get balance for each token
         for token in tokens:
+            current_price=get_token_price(token)
             balance = self.get_token_balance(token)
-            rs.append({'token': token, 'balance': balance})
+            invested = Transaction.get_invested_to_token(self.IdPortfolio, token)
+            avg_price = invested / balance if balance > 0 else 0
+            current_balance = balance * current_price
+            profit = current_balance - invested
+            roi = ((profit - invested)/ invested) * 100 if invested > 0 else 0
+
+            rs.append({
+                'token': token.upper(), 
+                'amount': balance, 
+                'current_price': current_price,
+                'current_balance': current_balance,
+                'invested': invested,
+                'avg_price': avg_price,
+                'profit': profit,
+                'roi': roi
+                })
         return rs
 
     def show_token_balance(self, token: str):

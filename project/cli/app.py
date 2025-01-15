@@ -22,7 +22,10 @@ class AppCLI:
 
     def create_portfolio(self):
         name = input("Enter portfolio name: ")
-        base_ticker = input("Enter base ticker (e.g., 'USD', 'BTC'): ")
+        base_ticker = input("Enter base ticker (e.g., 'USD', 'BTC') default USDT: ")
+        if not base_ticker:
+            base_ticker = 'USDT'
+
         try:
             portfolio = Portfolio.create(Name=name, BaseTicker=base_ticker)
             print(f"Portfolio '{portfolio.Name}' created successfully!")

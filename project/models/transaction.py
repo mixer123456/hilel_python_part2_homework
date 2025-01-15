@@ -40,7 +40,29 @@ class Transaction(BaseModel):
         )
 
     @classmethod
-    def get_balance_by_token(self,id_portfolio: int, token: str):
+    def get_invested_to_token(cls, id_portfolio: int, token: str) -> float:
+
+        buy_total = (Transaction
+                    .select(fn.SUM(Transaction.Total).alias('total'))
+                    .where((Transaction.IdPortfolio == id_portfolio) &
+                            (Transaction.Token == token.lower()) &
+                            (Transaction.TransactionType == 'buy') &
+                            (Transaction.IdParentTransaction.is_null()))
+                    .scalar() or 0)
+
+
+        sell_total = (Transaction
+                    .select(fn.SUM(Transaction.Total).alias('total'))
+                    .where((Transaction.IdPortfolio == id_portfolio) &
+                            (Transaction.Token == token.lower()) &
+                            (Transaction.TransactionType == 'sell') &
+                            (Transaction.IdParentTransaction.is_null()))
+                    .scalar() or 0)
+
+        return buy_total - sell_total
+
+    @classmethod
+    def get_balance_by_token(cls, id_portfolio: int, token: str):
         # Get the latest transaction for the given token
         last_transaction = (Transaction
                             .select()
@@ -54,7 +76,7 @@ class Transaction(BaseModel):
             return 0
 
     @classmethod
-    def get_last_transactions(self, id_portfolio: int ,limit: int) -> list:
+    def get_last_transactions(cls, id_portfolio: int ,limit: int) -> list:
         try:
             transactions = (Transaction
                             .select()

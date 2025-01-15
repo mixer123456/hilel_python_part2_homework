@@ -6,6 +6,8 @@ from cli.menu import PortfolioMenu
 from models.portfolio import Portfolio
 from models.transaction import Transaction
 
+from colorama import init, Fore
+from tabulate import tabulate
 
 class PortfolioCLI:
     portfolio = None
@@ -20,11 +22,41 @@ class PortfolioCLI:
         choice = self.menu.get_choice()
         self.menu.handle_choice(choice)
 
+    def print_balance(self, data ):
+        print(data)
+        headers = [
+            "Token",
+            "Amount",
+            "Price (USD)", 
+            "Invested",
+            f"Total ({self.portfolio.BaseTicker})",
+            "Avg Price",
+            "Profit",
+            "ROI"
+            ]
+        headers = [Fore.YELLOW + header + Fore.RESET for header in headers]
+        
+        colored_data = [
+            (
+             Fore.CYAN + row['token'], 
+             Fore.MAGENTA + str(row['amount']),
+             Fore.GREEN + str(row['current_price']),
+             Fore.CYAN + str(row['invested']),
+             Fore.CYAN + str(row['current_balance']),
+             (Fore.GREEN if row['avg_price'] >= row['current_price'] else Fore.RED) + str(row['avg_price']),
+            (Fore.GREEN if row['profit'] >= 0 else Fore.RED) + str(row['profit']),
+            (Fore.GREEN if row['roi'] >= 0 else Fore.RED) + str(row['roi'])+ Fore.RESET
+             )
+            for row in data
+        ]
+        
+        print(tabulate(colored_data, headers, tablefmt="grid"))
+        
     def view_balance(self):    
         balance = self.portfolio.get_balance()
-        print(f"Portfolio '{self.portfolio.Name}' balance:")
-        for item in balance:
-            print(f"{item['token'].upper()} - {item['balance']}")
+        self.print_balance(balance)
+
+        
 
 
     def add_transaction(self):

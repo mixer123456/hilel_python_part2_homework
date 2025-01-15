@@ -23,7 +23,6 @@ class PortfolioCLI:
         self.menu.handle_choice(choice)
 
     def print_balance(self, data ):
-        print(data)
         headers = [
             "Token",
             "Amount",

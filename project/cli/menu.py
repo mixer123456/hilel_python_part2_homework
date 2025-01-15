@@ -68,3 +68,4 @@ class PortfolioMenu(Menu):
             self.cli.menu_exit()
         else:
             print("Invalid choice. Please try again.")
+

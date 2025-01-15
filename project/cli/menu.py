@@ -19,7 +19,7 @@ class Menu:
         return input("Enter your choice: ").strip()
     
 
-class MainMenu(Menu):
+class AppMenu(Menu):
     def __init__(self, cli):
         super().__init__(
             title="Portfolio Management CLI",
@@ -37,7 +37,7 @@ class MainMenu(Menu):
         elif choice == "2":
             self.cli.show_portfolios()
         elif choice == "e":
-            self.cli.menu_exit()
+            self.cli.exit()
         else:
             print("Invalid choice. Please try again.")
 
@@ -63,9 +63,9 @@ class PortfolioMenu(Menu):
         elif choice == "3":
             self.cli.add_transaction()
         elif choice == "b":
-            self.cli.deselect_portfolio()
+            self.cli.back_to_main_menu()
         elif choice == "e":
-            self.cli.menu_exit()
+            self.cli.exit()
         else:
             print("Invalid choice. Please try again.")
 
